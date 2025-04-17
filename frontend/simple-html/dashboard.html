@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд - Цвет Взгляда</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div id="app">
+        <!-- Заголовок -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-gray-900">Цвет Взгляда</h1>
+                    <!-- Навигация -->
+                    <nav class="ml-10">
+                        <ul class="flex space-x-4">
+                            <li><a href="dashboard.html" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Дашборд</a></li>
+                            <li><a href="appointments.html" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Записи</a></li>
+                            <li><a href="clients.html" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Клиенты</a></li>
+                            <li><a href="services.html" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Услуги</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <!-- Профиль пользователя -->
+                <div class="flex items-center">
+                    <span class="text-sm text-gray-700 mr-2" id="user-name">Демо Пользователь</span>
+                    <div class="h-8 w-8 rounded-full bg-blue-200 flex items-center justify-center text-blue-700">
+                        ДП
+                    </div>
+                    <button id="logout-btn" class="ml-4 text-sm text-gray-600 hover:text-gray-900">Выйти</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Область уведомлений -->
+            <div id="notification" class="hidden mb-4 rounded-md p-4 bg-green-50">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <span class="h-5 w-5 text-green-400">✓</span>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-green-800" id="notification-message"></p>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button id="close-notification" class="inline-flex rounded-md p-1.5 bg-green-50 text-green-500 hover:bg-green-100">
+                            <span class="sr-only">Закрыть</span>
+                            <span class="h-5 w-5">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Заголовок страницы -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">Панель управления</h1>
+                <p class="mt-1 text-sm text-gray-600">Обзор основных показателей бизнеса</p>
+            </div>
+
+            <!-- Основные показатели -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                <!-- Записи сегодня -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-indigo-100 rounded-md p-3">
+                                <svg class="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Записей сегодня
+                                    </dt>
+                                    <dd>
+                                        <div class="text-lg font-medium text-gray-900" id="today-appointments-count">
+                                            0
+                                        </div>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6">
+                        <div class="text-sm">
+                            <a href="appointments.html" class="font-medium text-indigo-600 hover:text-indigo-500">
+                                Посмотреть все записи
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Общее количество клиентов -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Всего клиентов
+                                    </dt>
+                                    <dd>
+                                        <div class="text-lg font-medium text-gray-900" id="total-clients-count">
+                                            0
+                                        </div>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6">
+                        <div class="text-sm">
+                            <a href="clients.html" class="font-medium text-indigo-600 hover:text-indigo-500">
+                                Посмотреть всех клиентов
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Выручка сегодня -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                                <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Выручка сегодня
+                                    </dt>
+                                    <dd>
+                                        <div class="text-lg font-medium text-gray-900" id="today-revenue">
+                                            0 ₽
+                                        </div>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6">
+                        <div class="text-sm">
+                            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
+                                Посмотреть все продажи
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Эффективность -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
+                                <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Эффективность
+                                    </dt>
+                                    <dd>
+                                        <div class="text-lg font-medium text-gray-900" id="efficiency-percentage">
+                                            0%
+                                        </div>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6">
+                        <div class="text-sm">
+                            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
+                                Посмотреть отчеты
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <!-- График продаж за неделю -->
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Продажи за неделю</h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">Динамика продаж за последние 7 дней</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-200">
+                        <div class="px-4 py-5 sm:p-6">
+                            <canvas id="sales-chart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Последние записи -->
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Последние записи</h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">Недавние записи клиентов</p>
+                        </div>
+                        <a href="appointments.html" class="text-sm text-indigo-600 hover:text-indigo-500">
+                            Все записи
+                        </a>
+                    </div>
+                    <div class="border-t border-gray-200" id="recent-appointments-container">
+                        <div id="appointments-loading" class="flex justify-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                        </div>
+                        <div id="recent-appointments" class="hidden">
+                            <!-- Записи будут добавлены через JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Подвал -->
+        <footer class="bg-white border-t border-gray-200 py-4 mt-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="text-center text-sm text-gray-500">© 2023 Цвет Взгляда. Все права защищены.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html> 

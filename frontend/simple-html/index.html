@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления бизнесом - Цвет Взгляда</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-100 font-sans">
+    <div id="app">
+        <!-- Заголовок -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-gray-900">Цвет Взгляда</h1>
+                    <!-- Навигация -->
+                    <nav class="ml-10">
+                        <ul class="flex space-x-4">
+                            <li><a href="dashboard.html" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Дашборд</a></li>
+                            <li><a href="appointments.html" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Записи</a></li>
+                            <li><a href="clients.html" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Клиенты</a></li>
+                            <li><a href="services.html" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Услуги</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <!-- Профиль пользователя -->
+                <div class="flex items-center">
+                    <span class="text-sm text-gray-700 mr-2" id="user-name">Демо Пользователь</span>
+                    <div class="h-8 w-8 rounded-full bg-blue-200 flex items-center justify-center text-blue-700">
+                        ДП
+                    </div>
+                    <button id="logout-btn" class="ml-4 text-sm text-gray-600 hover:text-gray-900">Выйти</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Область уведомлений -->
+            <div id="notification" class="hidden mb-4 rounded-md p-4 bg-green-50">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <span class="h-5 w-5 text-green-400">✓</span>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-green-800" id="notification-message"></p>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button id="close-notification" class="inline-flex rounded-md p-1.5 bg-green-50 text-green-500 hover:bg-green-100">
+                            <span class="sr-only">Закрыть</span>
+                            <span class="h-5 w-5">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Плейсхолдер для контента каждой страницы -->
+            <div id="content">
+                <div class="text-center py-10">
+                    <h2 class="text-xl font-bold mb-4">Добро пожаловать в систему управления бизнесом "Цвет Взгляда"</h2>
+                    <p class="text-gray-600">Выберите раздел в меню выше, чтобы начать работу</p>
+                    
+                    <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        <a href="dashboard.html" class="block bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow">
+                            <h3 class="text-lg font-medium mb-2">Дашборд</h3>
+                            <p class="text-gray-500">Обзор ключевых показателей бизнеса</p>
+                        </a>
+                        <a href="appointments.html" class="block bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow">
+                            <h3 class="text-lg font-medium mb-2">Записи</h3>
+                            <p class="text-gray-500">Управление записями клиентов</p>
+                        </a>
+                        <a href="clients.html" class="block bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow">
+                            <h3 class="text-lg font-medium mb-2">Клиенты</h3>
+                            <p class="text-gray-500">База данных клиентов</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Подвал -->
+        <footer class="bg-white border-t border-gray-200 py-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="text-center text-sm text-gray-500">© 2023 Цвет Взгляда. Все права защищены.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 
