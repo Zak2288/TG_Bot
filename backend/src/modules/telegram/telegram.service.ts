@@ -100,6 +100,10 @@ export class TelegramService implements OnModuleInit {
     this.bot.command('mybookings', (ctx) => this.showUserAppointments(ctx));
     this.bot.hears('📋 Мои записи', (ctx) => this.showUserAppointments(ctx));
 
+    // Прайс-лист
+    this.bot.command('price', (ctx) => this.showPriceList(ctx));
+    this.bot.hears('💰 Прайс', (ctx) => this.showPriceList(ctx));
+
     // Помощь
     this.bot.hears('❓ Помощь', (ctx) => {
       return ctx.reply(
@@ -229,7 +233,7 @@ export class TelegramService implements OnModuleInit {
 
         // Проверяем, может ли пользователь отменить эту запись
         const isAdmin = userId.toString() === this.ADMIN_CHAT_ID;
-        const isOwner = appointment.sourceId === userId.toString();
+        const isOwner = appointment.source === Source.TELEGRAM;
 
         if (!isAdmin && !isOwner) {
           await ctx.answerCbQuery('У вас нет прав для отмены этой записи');
@@ -277,7 +281,7 @@ export class TelegramService implements OnModuleInit {
         }
         
         const isAdmin = userId.toString() === this.ADMIN_CHAT_ID;
-        const isOwner = appointment.sourceId === userId.toString();
+        const isOwner = appointment.source === Source.TELEGRAM;
         
         await this.processSimpleCancellation(ctx, appointment, isAdmin, isOwner);
       } catch (error) {
@@ -479,7 +483,7 @@ export class TelegramService implements OnModuleInit {
           startTime: startDateTime, // Оставляем как Date, но убеждаемся, что они корректны
           endTime: endDateTime,     // Оставляем как Date, но убеждаемся, что они корректны
           source: Source.TELEGRAM,
-          sourceId: userId.toString(),
+          sourceId: userId.toString(), // Убедимся, что ID пользователя Telegram всегда сохраняется как строка
           status: AppointmentStatus.SCHEDULED
         };
         
@@ -551,15 +555,15 @@ export class TelegramService implements OnModuleInit {
       );
     });
 
-    // Добавляем обработку команды прайса
-    this.bot.command('price', async (ctx) => {
+    // Добавляем обработку команды прайса (через WebApp)
+    this.bot.action(/open_price_webapp/, async (ctx) => {
       const userId = ctx.from?.id;
       if (!userId) return;
-
+      
       const webAppUrl = `${process.env.WEB_APP_URL}/price?userId=${userId}`;
       
       await ctx.reply(
-        '💰 Наш прайс-лист:',
+        '💰 Наш прайс-лист в веб-приложении:',
         Markup.inlineKeyboard([
           [
             Markup.button.webApp('📱 Открыть в приложении', webAppUrl),
@@ -672,7 +676,7 @@ export class TelegramService implements OnModuleInit {
           
           this.userStates.set(userId, state);
           this.logger.log(`Обновлено состояние после выбора даты: ${JSON.stringify(state)}`);
-        } else {
+      } else {
           await this.handleUserResponse(ctx, state);
         }
       } catch (error) {
@@ -727,22 +731,22 @@ export class TelegramService implements OnModuleInit {
     this.logger.log(`Текущее состояние: ${JSON.stringify(state)}`);
     
     try {
-      switch (state.waitingFor) {
-        case 'name':
+    switch (state.waitingFor) {
+      case 'name':
           this.logger.log(`Обработка имени для пользователя ${userId}`);
-          state.clientName = text;
-          state.waitingFor = 'phone';
-          await ctx.reply('Укажите ваш номер телефона:');
+        state.clientName = text;
+        state.waitingFor = 'phone';
+        await ctx.reply('Укажите ваш номер телефона:');
           this.userStates.set(userId, state);
           this.logger.log(`Обновлено состояние после ввода имени: ${JSON.stringify(this.userStates.get(userId))}`);
-          break;
-          
-        case 'phone':
+        break;
+        
+      case 'phone':
           this.logger.log(`Обработка телефона для пользователя ${userId}`);
-          state.clientPhone = text;
-          state.waitingFor = 'branch';
-          
-          try {
+        state.clientPhone = text;
+        state.waitingFor = 'branch';
+        
+        try {
             const startTime = Date.now();
             // Временно используем статический список филиалов
             const branches = [
@@ -752,32 +756,32 @@ export class TelegramService implements OnModuleInit {
               // { id: 4, name: 'Дополнительный филиал 2' }
             ];
             
-            const buttons = branches.map(branch => Markup.button.callback(branch.name, `select_branch:${branch.id}`));
-            
-            await ctx.reply(
+          const buttons = branches.map(branch => Markup.button.callback(branch.name, `select_branch:${branch.id}`));
+          
+          await ctx.reply(
               'Выберите филиал:',
-              Markup.inlineKeyboard(buttons, { columns: 1 })
-            );
+            Markup.inlineKeyboard(buttons, { columns: 1 })
+          );
             
             this.userStates.set(userId, state);
             const endTime = Date.now();
             this.logger.log(`Время обработки выбора филиала: ${endTime - startTime}ms`);
             this.logger.log(`Обновлено состояние после ввода телефона: ${JSON.stringify(this.userStates.get(userId))}`);
-          } catch (error) {
-            this.logger.error(`Ошибка при получении филиалов: ${error.message}`);
-            await ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже.');
-            this.userStates.delete(userId);
-          }
-          break;
-          
+        } catch (error) {
+          this.logger.error(`Ошибка при получении филиалов: ${error.message}`);
+          await ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже.');
+          this.userStates.delete(userId);
+        }
+        break;
+        
         case 'cancellation_reason':
           this.logger.log(`Обработка причины отмены для пользователя ${userId}`);
           await this.processCancellationWithReason(ctx, state.appointmentId, text);
           break;
           
-        default:
+      default:
           this.logger.warn(`Неизвестное состояние для пользователя ${userId}: ${state.waitingFor}`);
-          await ctx.reply('Используйте команды бота или кнопки меню для взаимодействия.');
+        await ctx.reply('Используйте команды бота или кнопки меню для взаимодействия.');
       }
     } catch (error) {
       this.logger.error(`Ошибка при обработке ответа пользователя: ${error.message}`);
@@ -971,7 +975,7 @@ export class TelegramService implements OnModuleInit {
           });
 
           const service2 = this.serviceRepository.create({
-            name: 'Окрашивание волос',
+            name: 'Индивидуальное',
             price: 3000,
             category: 'Парикмахерские услуги',
             description: 'Полное окрашивание волос',
@@ -985,16 +989,26 @@ export class TelegramService implements OnModuleInit {
 
         if (branch2) {
           const service3 = this.serviceRepository.create({
-            name: 'Маникюр',
-            price: 1000,
-            category: 'Ногтевой сервис',
-            description: 'Классический маникюр',
+            name: 'Диагностика радужек глаз индивидуальная',
+            price: 0,
+            category: 'Диагностика',
+            description: 'Индивидуальная диагностика радужек глаз',
             duration: 60,
             branchId: branch2.id,
             isActive: true,
           });
 
-          await this.serviceRepository.save(service3);
+          const service4 = this.serviceRepository.create({
+            name: 'Диагностика радужек глаз семейная',
+            price: 0,
+            category: 'Диагностика',
+            description: 'Семейная диагностика радужек глаз',
+            duration: 90,
+            branchId: branch2.id,
+            isActive: true,
+          });
+
+          await this.serviceRepository.save([service3, service4]);
         }
 
         this.logger.log('Тестовые услуги созданы');
@@ -1085,5 +1099,241 @@ export class TelegramService implements OnModuleInit {
       status: AppointmentStatus.CANCELLED 
     });
 
+    // Форматируем дату и время
+    const startTime = new Date(appointment.startTime);
+    const formattedDate = `${startTime.getDate().toString().padStart(2, '0')}.${(startTime.getMonth() + 1).toString().padStart(2, '0')}.${startTime.getFullYear()}`;
+    const formattedTime = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+
     // Отправляем уведомление об отмене
-    const message = `
+    const message = `❌ Запись отменена\n\n` +
+      `📅 Дата: ${formattedDate}\n` +
+      `⏰ Время: ${formattedTime}\n` +
+      `🏢 Филиал: ${appointment.branch.name}\n` +
+      `💇 Услуга: ${appointment.service.name}\n` +
+      `👤 Клиент: ${appointment.client.name}\n` +
+      `📞 Телефон: ${appointment.client.phone}`;
+
+    // Отправляем уведомление клиенту
+    if (appointment.client.source === Source.TELEGRAM) {
+      await ctx.telegram.sendMessage(appointment.client.id.toString(), message);
+    }
+
+    // Отправляем уведомление в группу
+    if (this.GROUP_CHAT_ID) {
+      await ctx.telegram.sendMessage(this.GROUP_CHAT_ID, message);
+    }
+
+    // Отправляем уведомление администратору
+    if (this.ADMIN_CHAT_ID) {
+      await ctx.telegram.sendMessage(this.ADMIN_CHAT_ID, message);
+    }
+
+    await ctx.reply('✅ Запись успешно отменена');
+  }
+
+  private async processCancellationWithReason(
+    ctx: Context,
+    appointmentId: number,
+    reason: string,
+  ): Promise<void> {
+    try {
+      const appointment = await this.appointmentsService.findOne(appointmentId);
+      if (!appointment) {
+        await ctx.reply('❌ Запись не найдена');
+        return;
+      }
+
+      await this.appointmentsService.update(appointmentId, {
+        status: AppointmentStatus.CANCELLED,
+        cancellationReason: reason,
+      });
+
+      // Форматируем дату и время
+      const startTime = new Date(appointment.startTime);
+      const formattedDate = `${startTime.getDate().toString().padStart(2, '0')}.${(startTime.getMonth() + 1).toString().padStart(2, '0')}.${startTime.getFullYear()}`;
+      const formattedTime = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+
+      // Отправляем уведомления
+      const message = `❌ Запись отменена\n\n` +
+        `📅 Дата: ${formattedDate}\n` +
+        `⏰ Время: ${formattedTime}\n` +
+        `🏢 Филиал: ${appointment.branch.name}\n` +
+        `💇 Услуга: ${appointment.service.name}\n` +
+        `👤 Клиент: ${appointment.client.name}\n` +
+        `📞 Телефон: ${appointment.client.phone}\n` +
+        `❌ Причина отмены: ${reason}`;
+
+      // Отправляем уведомление клиенту
+      if (appointment.client.source === Source.TELEGRAM) {
+        await ctx.telegram.sendMessage(appointment.client.id.toString(), message);
+      }
+
+      // Отправляем уведомление в группу
+      if (this.GROUP_CHAT_ID) {
+        await ctx.telegram.sendMessage(this.GROUP_CHAT_ID, message);
+      }
+
+      // Отправляем уведомление администратору
+      if (this.ADMIN_CHAT_ID) {
+        await ctx.telegram.sendMessage(this.ADMIN_CHAT_ID, message);
+      }
+
+      await ctx.reply('✅ Запись успешно отменена');
+    } catch (error) {
+      console.error('Error processing cancellation:', error);
+      await ctx.reply('❌ Произошла ошибка при отмене записи');
+    }
+  }
+
+  // Проверка, является ли пользователь администратором
+  isAdmin(userId: string | number): boolean {
+    return userId.toString() === this.ADMIN_CHAT_ID;
+  }
+
+  // Метод для отображения прайс-листа
+  private async showPriceList(ctx: Context) {
+    try {
+      const userId = ctx.from?.id;
+      if (!userId) return;
+
+      // Получаем все активные услуги
+      const services = await this.serviceRepository.find({
+        where: { isActive: true },
+        order: { category: 'ASC', name: 'ASC' }
+      });
+
+      if (services.length === 0) {
+        await ctx.reply('К сожалению, в данный момент нет доступных услуг.');
+        return;
+      }
+
+      // Группируем услуги по категориям
+      const categorizedServices: Record<string, Service[]> = {};
+      services.forEach(service => {
+        if (!categorizedServices[service.category]) {
+          categorizedServices[service.category] = [];
+        }
+        categorizedServices[service.category].push(service);
+      });
+
+      // Формируем сообщение с прайс-листом
+      let message = '💰 <b>Прайс-лист услуг:</b>\n\n';
+      
+      for (const [category, servicesInCategory] of Object.entries(categorizedServices)) {
+        message += `<b>${category}</b>\n`;
+        
+        servicesInCategory.forEach((service: Service) => {
+          message += `• ${service.name} - ${service.price} ₽\n`;
+        });
+        
+        message += '\n';
+      }
+
+      await ctx.reply(message, { 
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([
+          Markup.button.callback('Записаться на услугу', 'start_appointment')
+        ])
+      });
+
+      // Добавляем обработчик для кнопки "Записаться на услугу"
+      this.bot.action('start_appointment', (actionCtx) => {
+        actionCtx.answerCbQuery();
+        this.startAppointmentFlow(actionCtx);
+      });
+
+    } catch (error) {
+      this.logger.error(`Ошибка при отображении прайс-листа: ${error.message}`);
+      await ctx.reply('Произошла ошибка при получении прайс-листа. Пожалуйста, попробуйте позже.');
+    }
+  }
+
+  // Метод для обновления статуса записи и отправки уведомления клиенту и администраторам
+  public async updateAppointmentStatus(appointmentId: number, status: AppointmentStatus, reason?: string): Promise<void> {
+    try {
+      const appointment = await this.appointmentRepository.findOne({
+        where: { id: appointmentId },
+        relations: ['client', 'service', 'branch']
+      });
+
+      if (!appointment) {
+        this.logger.warn(`Запись с ID ${appointmentId} не найдена`);
+        return;
+      }
+
+      // Обновляем статус записи
+      await this.appointmentsService.update(appointmentId, { 
+        status,
+        cancellationReason: reason
+      });
+
+      // Формируем сообщение в зависимости от статуса
+      let statusMessage = '';
+      switch (status) {
+        case AppointmentStatus.CONFIRMED:
+          statusMessage = '✅ Ваша запись была подтверждена администратором';
+          break;
+        case AppointmentStatus.COMPLETED:
+          statusMessage = '✅ Ваш приём был успешно завершён';
+          break;
+        case AppointmentStatus.CANCELLED:
+          statusMessage = `❌ Ваша запись была отменена${reason ? ': ' + reason : ''}`;
+          break;
+        case AppointmentStatus.NO_SHOW:
+          statusMessage = '⚠️ Вы не пришли на запланированный приём';
+          break;
+        default:
+          statusMessage = `Статус вашей записи был изменён на: ${status}`;
+      }
+
+      // Если запись из Telegram, отправляем уведомление клиенту
+      if (appointment.source === Source.TELEGRAM && appointment.sourceId) {
+        try {
+          await this.bot.telegram.sendMessage(
+            appointment.sourceId,
+            `${statusMessage}\n\n` +
+            `📅 Запись #${appointment.id}\n` +
+            `📆 Дата: ${this.formatDate(appointment.startTime)}\n` +
+            `⏰ Время: ${this.formatTime(appointment.startTime)}\n` +
+            `💇 Услуга: ${appointment.service?.name || 'Не указана'}`
+          );
+          this.logger.log(`Уведомление о статусе отправлено клиенту: ${appointment.sourceId}`);
+        } catch (error) {
+          this.logger.error(`Не удалось отправить уведомление клиенту: ${error.message}`);
+        }
+      }
+
+      // Отправка уведомления в группу
+      const isIrisService = appointment.service?.name.toLowerCase().includes('радужк');
+      const serviceIcon = isIrisService ? '💇 ' : '💇 ';
+
+      await this.bot.telegram.sendMessage(
+        this.GROUP_CHAT_ID,
+        `${status === AppointmentStatus.CANCELLED ? '❌ Запись отменена!' : '🔄 Статус записи изменён!'}\n\n` +
+        `📅 Запись #${appointment.id}\n` +
+        `📆 Дата: ${this.formatDate(appointment.startTime)}\n` +
+        `⏰ Время: ${this.formatTime(appointment.startTime)}\n` +
+        `${serviceIcon}Услуга: ${appointment.service?.name || 'Не указана'}\n` +
+        `👤 Клиент: ${appointment.client?.name || 'Не указан'}\n` +
+        `📝 Статус: ${this.getStatusText(status)}`
+      );
+      
+      this.logger.log(`Уведомление о статусе записи ${appointmentId} отправлено в группу`);
+    } catch (error) {
+      this.logger.error(`Ошибка при обновлении статуса записи: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Вспомогательный метод для форматирования даты
+  private formatDate(date: Date): string {
+    const d = new Date(date);
+    return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+  }
+
+  // Вспомогательный метод для форматирования времени
+  private formatTime(date: Date): string {
+    const d = new Date(date);
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  }
+} 

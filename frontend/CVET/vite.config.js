@@ -21,6 +21,26 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true
       }
+    },
+    port: 8080,
+    open: true,
+    hmr: {
+      overlay: true
+    }
+  },
+  build: {
+    target: 'esnext',
+    minify: 'terser',
+    cssCodeSplit: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue': ['vue', 'vue-router', 'vuex'],
+          'charts': ['chart.js', 'vue-chartjs'],
+          'calendar': ['@fullcalendar/core', '@fullcalendar/daygrid', '@fullcalendar/timegrid', '@fullcalendar/vue3']
+        }
+      }
     }
   }
 })

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'http://localhost:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,7 +20,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.log('API Error:', error);
     if (error.response?.status === 401) {
+      console.log('401 Unauthorized error, redirecting to login');
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
@@ -59,6 +61,7 @@ export const services = {
   create: (data) => api.post('/services', data),
   update: (id, data) => api.put(`/services/${id}`, data),
   delete: (id) => api.delete(`/services/${id}`),
+  getCategories: () => api.get('/services/categories/all')
 };
 
 export const branches = {

@@ -14,6 +14,7 @@ import { SalesModule } from './modules/sales/sales.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
+import { WebModule } from './modules/web/web.module';
 
 @Module({
   imports: [
@@ -23,15 +24,14 @@ import { TelegramModule } from './modules/telegram/telegram.module';
       max: 100, // максимальное количество элементов в кэше
     }),
     TypeOrmModule.forRoot({
-      type: process.env.DB_TYPE === 'postgres' ? 'postgres' : 'sqlite',
+      type: 'postgres',
       host: process.env.DB_HOST,
-      port: process.env.DB_PORT ? +process.env.DB_PORT : 5432,
+      port: parseInt(process.env.DB_PORT || '5432', 10),
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
-      database: process.env.DB_TYPE === 'postgres' ? process.env.DB_DATABASE : 'database.sqlite',
+      database: process.env.DB_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
-      maxQueryExecutionTime: 1000,
       logging: ['error', 'warn'],
       extra: {
         max: 20,
@@ -52,7 +52,8 @@ import { TelegramModule } from './modules/telegram/telegram.module';
     SalesModule,
     NotificationsModule,
     IntegrationsModule,
-    TelegramModule
+    TelegramModule,
+    WebModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -3,10 +3,14 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
+import { initializeDatabase } from './db-init';
 
 dotenv.config();
 
 async function bootstrap() {
+  // Инициализация базы данных
+  await initializeDatabase();
+  
   const app = await NestFactory.create(AppModule);
   
   // CORS
@@ -32,7 +36,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   
   // Запуск приложения
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3001;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
 }

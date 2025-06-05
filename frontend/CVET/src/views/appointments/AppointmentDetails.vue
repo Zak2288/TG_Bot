@@ -31,7 +31,14 @@
             </div>
             <div class="info-item">
               <label>Service</label>
-              <p>{{ appointment.service_name }}</p>
+              <p>
+                {{ appointment.service_name }}
+                <span 
+                  v-if="isIrisService(appointment)" 
+                  class="iris-badge" 
+                  title="Запись на диагностику радужки"
+                >👁️</span>
+              </p>
             </div>
             <div class="info-item">
               <label>Date & Time</label>
@@ -64,24 +71,38 @@
           <h2>Actions</h2>
           <div class="action-buttons">
             <button 
-              v-if="appointment.status === 'Scheduled'"
+              v-if="appointment.status === 'SCHEDULED'"
+              class="btn btn-primary"
+              @click="confirmAppointment"
+            >
+              <i class="fas fa-check"></i> Подтвердить запись
+            </button>
+            <button 
+              v-if="appointment.status === 'SCHEDULED' || appointment.status === 'CONFIRMED'"
               class="btn btn-success"
               @click="markAsCompleted"
             >
-              <i class="fas fa-check"></i> Mark as Completed
+              <i class="fas fa-check-double"></i> Отметить как завершенную
             </button>
             <button 
-              v-if="appointment.status === 'Scheduled'"
+              v-if="appointment.status === 'SCHEDULED' || appointment.status === 'CONFIRMED'"
+              class="btn btn-warning"
+              @click="markAsNoShow"
+            >
+              <i class="fas fa-user-slash"></i> Клиент не явился
+            </button>
+            <button 
+              v-if="appointment.status !== 'CANCELLED' && appointment.status !== 'COMPLETED' && appointment.status !== 'NO_SHOW'"
               class="btn btn-danger"
               @click="cancelAppointment"
             >
-              <i class="fas fa-times"></i> Cancel Appointment
+              <i class="fas fa-times"></i> Отменить запись
             </button>
             <button 
               class="btn btn-info"
               @click="sendReminder"
             >
-              <i class="fas fa-bell"></i> Send Reminder
+              <i class="fas fa-bell"></i> Отправить напоминание
             </button>
           </div>
         </div>
@@ -211,9 +232,9 @@ export default {
 
     async function markAsCompleted() {
       try {
-        await store.dispatch('updateAppointment', {
+        await store.dispatch('updateAppointmentStatus', {
           id: route.params.id,
-          status: 'Completed'
+          status: 'COMPLETED'
         })
         await fetchAppointmentDetails()
       } catch (err) {
@@ -223,9 +244,12 @@ export default {
 
     async function cancelAppointment() {
       try {
-        await store.dispatch('updateAppointment', {
+        const reason = prompt('Укажите причину отмены записи:')
+        
+        await store.dispatch('updateAppointmentStatus', {
           id: route.params.id,
-          status: 'Cancelled'
+          status: 'CANCELLED',
+          reason: reason || undefined
         })
         await fetchAppointmentDetails()
       } catch (err) {
@@ -240,6 +264,34 @@ export default {
       } catch (err) {
         console.error('Error sending reminder:', err)
       }
+    }
+
+    async function confirmAppointment() {
+      try {
+        await store.dispatch('updateAppointmentStatus', {
+          id: route.params.id,
+          status: 'CONFIRMED'
+        })
+        await fetchAppointmentDetails()
+      } catch (err) {
+        console.error('Error confirming appointment:', err)
+      }
+    }
+
+    async function markAsNoShow() {
+      try {
+        await store.dispatch('updateAppointmentStatus', {
+          id: route.params.id,
+          status: 'NO_SHOW'
+        })
+        await fetchAppointmentDetails()
+      } catch (err) {
+        console.error('Error marking appointment as no-show:', err)
+      }
+    }
+
+    function isIrisService(appointment) {
+      return appointment.service_name?.toLowerCase().includes('радужк');
     }
 
     onMounted(() => {
@@ -260,7 +312,10 @@ export default {
       handleUpdate,
       markAsCompleted,
       cancelAppointment,
-      sendReminder
+      sendReminder,
+      confirmAppointment,
+      markAsNoShow,
+      isIrisService
     }
   }
 }
@@ -388,5 +443,14 @@ export default {
 .form-group textarea {
   min-height: 100px;
   resize: vertical;
+}
+
+.iris-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+  color: #00708f;
+  font-size: 16px;
 }
 </style> 

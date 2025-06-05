@@ -102,10 +102,12 @@ export default createStore({
       try {
         commit('SET_LOADING', true);
         const response = await auth.login(credentials);
-        commit('SET_TOKEN', response.data.token);
+        console.log('Login response:', response.data);
+        commit('SET_TOKEN', response.data.access_token);
         commit('SET_USER', response.data.user);
         return response;
       } catch (error) {
+        console.error('Login error:', error);
         commit('SET_ERROR', error.response?.data?.message || 'Ошибка входа');
         throw error;
       } finally {
@@ -337,6 +339,61 @@ export default createStore({
       } finally {
         commit('SET_LOADING', false);
       }
+    },
+
+    // Dashboard actions
+    async fetchDashboardStats({ commit }) {
+      try {
+        commit('SET_LOADING', true);
+        const response = await appointments.getAll();
+        const stats = {
+          todayAppointments: response.data.filter(appointment => {
+            const today = new Date().toISOString().split('T')[0];
+            return appointment.date === today;
+          }).length,
+          totalAppointments: response.data.length,
+          completedAppointments: response.data.filter(appointment => appointment.status === 'completed').length,
+          canceledAppointments: response.data.filter(appointment => appointment.status === 'canceled').length
+        };
+        return stats;
+      } catch (error) {
+        commit('SET_ERROR', error.response?.data?.message || 'Ошибка загрузки статистики');
+        return {
+          todayAppointments: 0,
+          totalAppointments: 0,
+          completedAppointments: 0,
+          canceledAppointments: 0
+        };
+      } finally {
+        commit('SET_LOADING', false);
+      }
+    },
+
+    async fetchRecentAppointments({ commit }) {
+      try {
+        commit('SET_LOADING', true);
+        const response = await appointments.getAll();
+        // Сортируем записи по дате (сначала новые)
+        const sortedAppointments = response.data.sort((a, b) => {
+          return new Date(b.date) - new Date(a.date);
+        });
+        // Берем последние 5 записей
+        return sortedAppointments.slice(0, 5);
+      } catch (error) {
+        commit('SET_ERROR', error.response?.data?.message || 'Ошибка загрузки последних записей');
+        return [];
+      } finally {
+        commit('SET_LOADING', false);
+      }
+    },
+
+    // Notification action
+    setNotification({ commit }, notification) {
+      commit('SET_ERROR', notification.message);
+      // Автоматически убираем уведомление через 5 секунд
+      setTimeout(() => {
+        commit('SET_ERROR', null);
+      }, 5000);
     },
   },
   getters: {

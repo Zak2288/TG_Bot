@@ -36,9 +36,9 @@ export default {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <nav v-if="isAuthenticated" class="bg-white shadow-lg">
-      <div class="max-w-7xl mx-auto px-4">
+  <div class="min-h-screen bg-gray-100 w-full">
+    <nav v-if="isAuthenticated" class="bg-white shadow-lg w-full">
+      <div class="w-full px-4">
         <div class="flex justify-between h-16">
           <div class="flex">
             <div class="flex-shrink-0 flex items-center">
@@ -159,7 +159,7 @@ export default {
       </div>
     </nav>
 
-    <main>
+    <main class="w-full">
       <router-view />
     </main>
   </div>
@@ -169,4 +169,44 @@ export default {
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+#app {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.full-width {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
 </style>

@@ -13,7 +13,7 @@ export class AppointmentsService {
   ) {}
 
   async findAll(query: any) {
-    const { status, branchId, startDate, endDate, clientId, page = 1, limit = 10 } = query;
+    const { status, branchId, startDate, endDate, clientId, source, page = 1, limit = 10 } = query;
     
     const queryBuilder = this.appointmentRepository.createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.client', 'client')
@@ -30,6 +30,10 @@ export class AppointmentsService {
 
     if (clientId) {
       queryBuilder.andWhere('appointment.clientId = :clientId', { clientId });
+    }
+    
+    if (source) {
+      queryBuilder.andWhere('appointment.source = :source', { source });
     }
 
     if (startDate && endDate) {

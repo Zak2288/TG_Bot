@@ -108,6 +108,26 @@ export default {
         dispatch('setLoading', false, { root: true });
       }
     },
+    async updateAppointmentStatus({ commit, dispatch }, { id, status, reason }) {
+      try {
+        commit('SET_LOADING', true);
+        const response = await api.put(`/appointments/${id}/status`, { status, reason });
+        commit('UPDATE_APPOINTMENT', response.data);
+        dispatch('showNotification', {
+          type: 'success',
+          message: 'Статус записи успешно обновлен'
+        }, { root: true });
+        return response.data;
+      } catch (error) {
+        dispatch('showNotification', {
+          type: 'error',
+          message: 'Ошибка при обновлении статуса записи'
+        }, { root: true });
+        throw error;
+      } finally {
+        commit('SET_LOADING', false);
+      }
+    },
   },
   getters: {
     appointments: state => state.appointments,

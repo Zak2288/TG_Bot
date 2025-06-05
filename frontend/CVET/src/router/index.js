@@ -16,6 +16,9 @@ import Dashboard from '../views/Dashboard.vue';
 import AppointmentsList from '../views/appointments/AppointmentsList.vue';
 import AppointmentForm from '@/views/appointments/AppointmentForm.vue';
 
+// Импортируем компоненты для услуг
+import ServicesList from '../views/services/ServicesList.vue';
+
 const routes = [
   {
     path: '/',
@@ -85,8 +88,8 @@ const routes = [
   },
   {
     path: '/services',
-    name: 'Services',
-    component: () => import('../views/services/ServicesList.vue'),
+    name: 'ServicesList',
+    component: ServicesList,
     meta: { requiresAuth: true }
   },
   {

@@ -26,15 +26,13 @@ export class Appointment {
   endTime: Date;
 
   @Column({
-    type: 'enum',
-    enum: AppointmentStatus,
+    type: 'varchar',
     default: AppointmentStatus.SCHEDULED
   })
   status: AppointmentStatus;
 
   @Column({
-    type: 'enum',
-    enum: Source,
+    type: 'varchar',
     default: Source.OTHER
   })
   source: Source;

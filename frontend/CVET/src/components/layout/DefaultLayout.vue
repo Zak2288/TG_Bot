@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 w-full overflow-x-hidden">
     <!-- Шапка -->
-    <header class="bg-white shadow">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header class="bg-white shadow w-full">
+      <div class="w-full px-4">
         <div class="flex justify-between h-16">
           <div class="flex">
             <div class="flex-shrink-0 flex items-center">
@@ -23,7 +23,7 @@
           <div class="flex items-center">
             <div class="ml-3 relative">
               <div class="flex items-center">
-                <span class="text-gray-700 mr-2">{{ currentUser.name }}</span>
+                <span class="text-gray-700 mr-2">{{ currentUser ? currentUser.name : 'Пользователь' }}</span>
                 <button
                   @click="isUserMenuOpen = !isUserMenuOpen"
                   class="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -62,8 +62,8 @@
     </header>
 
     <!-- Основной контент -->
-    <main>
-      <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main class="w-full">
+      <div class="w-full px-4 py-6">
         <!-- Уведомления -->
         <div v-if="notification" class="mb-4">
           <div
@@ -128,19 +128,15 @@ export default {
     const route = useRoute();
     const isUserMenuOpen = ref(false);
 
-    // Получение данных о пользователе (для демо)
-    const currentUser = computed(() => {
-      return {
-        name: 'Демо Пользователь',
-        email: 'demo@example.com',
-        role: 'Администратор'
-      };
-    });
+    // Получение данных о пользователе из хранилища Vuex
+    const currentUser = computed(() => store.getters['auth/currentUser']);
     
     // Получение инициалов пользователя для аватара
     const userInitials = computed(() => {
       if (!currentUser.value) return '';
-      const nameParts = currentUser.value.name.split(' ');
+      const nameParts = currentUser.value.name ? currentUser.value.name.split(' ') : 
+        (currentUser.value.email ? [currentUser.value.email] : ['User']);
+      
       if (nameParts.length > 1) {
         return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
       }
@@ -150,7 +146,11 @@ export default {
     // Пункты меню навигации
     const navigationItems = [
       { title: 'Дашборд', route: '/dashboard', pathMatch: '/dashboard' },
-      { title: 'Записи', route: '/appointments', pathMatch: '/appointments' }
+      { title: 'Записи', route: '/appointments', pathMatch: '/appointments' },
+      { title: 'Клиенты', route: '/clients', pathMatch: '/clients' },
+      { title: 'Услуги и прайс', route: '/services', pathMatch: '/services' },
+      { title: 'Филиалы', route: '/branches', pathMatch: '/branches' },
+      { title: 'Статистика', route: '/statistics', pathMatch: '/statistics' }
     ];
     
     // Состояние загрузки и уведомления
@@ -190,4 +190,12 @@ export default {
     };
   },
 };
-</script> 
+</script>
+
+<style scoped>
+.min-h-screen {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+</style> 

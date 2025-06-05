@@ -64,6 +64,24 @@
             </button>
           </div>
         </div>
+        <div class="flex flex-wrap my-4 gap-4">
+          <!-- Существующие фильтры -->
+
+          <!-- Фильтр по источнику -->
+          <div class="w-full sm:w-auto">
+            <label for="source" class="block text-sm font-medium text-gray-700">Источник</label>
+            <select
+              id="source"
+              v-model="filters.source"
+              @change="resetPagination(); fetchAppointments()"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
+            >
+              <option v-for="option in sourceOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -104,95 +122,69 @@
         Нет записей с выбранными параметрами
       </div>
       <div v-else>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+        <div class="appointments-table-wrapper">
+          <table class="appointments-table">
+            <thead>
               <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Клиент
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Услуга
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Дата и время
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Филиал
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Статус
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Источник
-                </th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Действия
-                </th>
+                <th>ID</th>
+                <th>Клиент</th>
+                <th>Дата и время</th>
+                <th>Услуга</th>
+                <th>Статус</th>
+                <th>Источник</th>
+                <th>Действия</th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="appointment in appointments" :key="appointment.id" class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
-                        {{ getInitials(appointment.client.name) }}
-                      </div>
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ appointment.client.name }}
-                      </div>
-                      <div class="text-sm text-gray-500">
-                        {{ appointment.client.phone }}
-                      </div>
+            <tbody>
+              <tr v-for="appointment in appointments" :key="appointment.id" :class="{ 'iris-appointment': isIrisService(appointment) }">
+                <td>{{ appointment.id }}</td>
+                <td>
+                  <div class="client-info">
+                    <div class="client-avatar">{{ getInitials(appointment.client?.name) }}</div>
+                    <div class="client-details">
+                      <div class="client-name">{{ appointment.client?.name }}</div>
+                      <div class="client-phone">{{ appointment.client?.phone }}</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ appointment.service.name }}</div>
-                  <div class="text-sm text-gray-500">{{ appointment.service.price }} ₽</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ formatDate(appointment.startTime) }}</div>
-                  <div class="text-sm text-gray-500">
-                    {{ formatTime(appointment.startTime) }} - {{ formatTime(appointment.endTime) }}
+                <td>
+                  <div class="appointment-time">
+                    <div class="date">{{ formatDate(appointment.startTime) }}</div>
+                    <div class="time">{{ formatTime(appointment.startTime) }}</div>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ appointment.branch.name }}
+                <td>
+                  <div class="service-name">
+                    {{ appointment.service?.name }}
+                    <span v-if="isIrisService(appointment)" class="iris-badge" title="Запись на диагностику радужки">👁️</span>
+                  </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span 
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                    :class="{
-                      'bg-green-100 text-green-800': appointment.status === 'COMPLETED',
-                      'bg-yellow-100 text-yellow-800': appointment.status === 'SCHEDULED',
-                      'bg-blue-100 text-blue-800': appointment.status === 'CONFIRMED',
-                      'bg-red-100 text-red-800': appointment.status === 'CANCELLED' || appointment.status === 'NO_SHOW'
-                    }"
-                  >
+                <td>
+                  <span class="status-badge" :class="appointment.status.toLowerCase()">
                     {{ getStatusText(appointment.status) }}
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ getSourceText(appointment.source) }}
+                <td>
+                  <span class="source-badge">
+                    {{ getSourceText(appointment.source) }}
+                  </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div class="flex space-x-2 justify-end">
-                    <router-link
-                      :to="`/appointments/${appointment.id}/edit`"
-                      class="text-primary-600 hover:text-primary-900"
-                    >
-                      Изменить
-                    </router-link>
-                    <button
-                      @click="confirmDelete(appointment)"
-                      class="text-red-600 hover:text-red-900"
-                    >
-                      Удалить
-                    </button>
+                <td>
+                  <div class="actions-cell">
+                    <div class="flex space-x-2 justify-end">
+                      <router-link
+                        :to="`/appointments/${appointment.id}/edit`"
+                        class="text-primary-600 hover:text-primary-900"
+                      >
+                        Изменить
+                      </router-link>
+                      <button
+                        @click="confirmDelete(appointment)"
+                        class="text-red-600 hover:text-red-900"
+                      >
+                        Удалить
+                      </button>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -353,13 +345,23 @@ export default {
     const filters = reactive({
       date: new Date().toISOString().split('T')[0],
       status: '',
-      branchId: ''
+      branchId: '',
+      source: ''
     });
     
     const pagination = reactive({
       page: 1,
       limit: 10
     });
+    
+    // Список источников для фильтрации
+    const sourceOptions = [
+      { value: '', label: 'Все источники' },
+      { value: 'TELEGRAM', label: 'Telegram' },
+      { value: 'WEBSITE', label: 'Веб-сайт' },
+      { value: 'PHONE', label: 'Телефон' },
+      { value: 'OTHER', label: 'Другие' }
+    ];
     
     // Вычисляемые свойства
     const paginationPages = computed(() => {
@@ -550,12 +552,12 @@ export default {
     
     const getSourceText = (source) => {
       const sourceMap = {
+        'TELEGRAM': 'Telegram',
         'WEBSITE': 'Веб-сайт',
         'VK': 'ВКонтакте',
-        'TELEGRAM': 'Телеграм',
         'AVITO': 'Авито',
         'PHONE': 'Телефон',
-        'OTHER': 'Другое'
+        'OTHER': 'Другой'
       };
       return sourceMap[source] || source;
     };
@@ -570,6 +572,11 @@ export default {
       };
       return colorMap[status] || '#6B7280'; // gray-500
     };
+    
+    // Функция для определения, является ли услуга "Радужкой"
+    function isIrisService(appointment) {
+      return appointment.service?.name.toLowerCase().includes('радужк');
+    }
     
     return {
       loading,
@@ -594,7 +601,8 @@ export default {
       formatDate,
       formatTime,
       getStatusText,
-      getSourceText
+      getSourceText,
+      isIrisService
     };
   }
 };
@@ -605,5 +613,25 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Стили для записей на радужку */
+.iris-appointment {
+  position: relative;
+  background-color: rgba(129, 200, 255, 0.05);
+}
+
+.iris-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+  color: #00708f;
+  font-size: 16px;
+}
+
+.service-name {
+  display: flex;
+  align-items: center;
 }
 </style> 

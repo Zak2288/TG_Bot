@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
 import { TelegramController } from './telegram.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -17,7 +17,7 @@ import { ServicesModule } from '../services/services.module';
     AppointmentsModule,
     ClientsModule,
     BranchesModule,
-    ServicesModule,
+    forwardRef(() => ServicesModule),
   ],
   controllers: [TelegramController],
   providers: [TelegramService],
